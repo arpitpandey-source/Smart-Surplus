@@ -1,0 +1,24 @@
+<header class="navbar">
+    <a href="{{ url_for('home') }}" class="logo">SmartSurplus</a>
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('donations') }}">Donations</a>
+        {% if g.user %}
+            {% if g.user.role in ('donor', 'admin') %}<a href="{{ url_for('donate') }}">Donate</a>{% endif %}
+            {% if g.user.role != 'admin' %}<a href="{{ url_for('my_activity') }}">My activity</a>{% endif %}
+            {% if g.user.role == 'admin' %}<a href="{{ url_for('audit_view') }}">Audit log</a>{% endif %}
+        {% endif %}
+    </nav>
+    <div class="nav-actions">
+        {% if g.user %}
+            <span class="nav-user">{{ g.user.full_name }} ({{ g.user.role }})</span>
+            <form action="{{ url_for('logout') }}" method="POST" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="nav-button">Log out</button>
+            </form>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="nav-button">Log in</a>
+            <a href="{{ url_for('register') }}" class="nav-button">Register</a>
+        {% endif %}
+    </div>
+</header>

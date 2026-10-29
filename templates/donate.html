@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Donate Food{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">MAKE A DIFFERENCE</p>
+    <h1>Share Your Surplus Food</h1>
+    <p>Provide the details below so eligible recipients can learn about your available food.</p>
+</section>
+<form class="donation-form" action="{{ url_for('donate') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="food_name">Food name</label>
+    <input type="text" id="food_name" name="food_name" placeholder="e.g. Fresh meal boxes" required maxlength="100" value="{{ form.get('food_name', '') }}">
+    <label for="category_id">Category</label>
+    <select id="category_id" name="category_id" required>
+        <option value="">Choose...</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {{ 'selected' if form.get('category_id') == c.id|string }}>{{ c.name }}</option>
+        {% endfor %}
+    </select>
+    <label for="quantity">Quantity (portions)</label>
+    <input type="number" id="quantity" name="quantity" min="1" max="100000" required value="{{ form.get('quantity', '') }}">
+    <label for="location">Pickup location</label>
+    <input type="text" id="location" name="location" required maxlength="200" value="{{ form.get('location', '') }}">
+    <label for="deadline">Collection deadline</label>
+    <input type="datetime-local" id="deadline" name="deadline" required value="{{ form.get('deadline', '') }}">
+    <button type="submit" class="primary-button form-submit">Submit Food Listing</button>
+</form>
+<p class="small-note safety-note">Only list food that can be handled, transported, and collected safely. A submitted listing does not certify that food is safe to consume.</p>
+{% endblock %}

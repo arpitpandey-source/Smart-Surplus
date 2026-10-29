@@ -1,0 +1,382 @@
+
+/* Basic page settings */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #20332a;
+    background: #f8faf6;
+    line-height: 1.6;
+}
+
+/* Navigation bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 7%;
+    background: #ffffff;
+    border-bottom: 1px solid #e7eee7;
+}
+
+.logo {
+    color: #23764a;
+    font-size: 24px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.navbar nav {
+    display: flex;
+    gap: 24px;
+}
+
+.navbar nav a {
+    color: #405247;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.navbar nav a:hover {
+    color: #23764a;
+}
+
+.nav-button,
+.primary-button {
+    display: inline-block;
+    background: #23764a;
+    color: #ffffff;
+    padding: 11px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.nav-button:hover,
+.primary-button:hover {
+    background: #195a37;
+}
+
+/* Hero section */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+    padding: 90px 10%;
+    background: #edf5e9;
+}
+
+.hero-content {
+    max-width: 620px;
+}
+
+.eyebrow {
+    color: #23764a;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.hero h1 {
+    font-size: clamp(36px, 5vw, 60px);
+    line-height: 1.12;
+    margin: 18px 0;
+}
+
+.hero h1 span {
+    display: block;
+    color: #23764a;
+}
+
+.hero-description {
+    max-width: 550px;
+    color: #59675e;
+    margin-bottom: 28px;
+}
+
+.small-note {
+    color: #68786c;
+    font-size: 13px;
+    margin-top: 20px;
+}
+
+/* Hero information card */
+.hero-card {
+    flex: 0 0 270px;
+    text-align: center;
+    padding: 35px 25px;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 12px 35px rgba(30, 70, 40, 0.08);
+}
+
+.food-icon {
+    font-size: 58px;
+}
+
+.hero-card h2 {
+    font-size: 22px;
+}
+
+.hero-card p {
+    color: #68786c;
+}
+
+.impact-label {
+    margin-top: 24px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #edf5e9;
+    color: #23764a;
+    font-weight: bold;
+}
+
+/* General sections */
+.section {
+    padding: 70px 10%;
+    text-align: center;
+}
+
+.section h2,
+.mission h2 {
+    font-size: 32px;
+    margin-top: 10px;
+}
+
+.section > p:not(.eyebrow) {
+    max-width: 760px;
+    margin: 15px auto;
+    color: #59675e;
+}
+
+/* Three process cards */
+.steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 35px;
+    text-align: left;
+}
+
+.step-card {
+    padding: 25px;
+    border: 1px solid #e4ebe2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.step-number {
+    color: #23764a;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.step-card p {
+    color: #68786c;
+    font-size: 14px;
+}
+
+/* Mission section */
+.mission {
+    padding: 55px 10%;
+    text-align: center;
+    background: #e3efdf;
+}
+
+.mission p {
+    max-width: 650px;
+    margin: 0 auto;
+    color: #59675e;
+}
+
+/* Footer */
+footer {
+    padding: 22px;
+    text-align: center;
+    background: #ffffff;
+    color: #68786c;
+    font-size: 13px;
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 760px) {
+    .navbar {
+        flex-wrap: wrap;
+        padding: 18px 6%;
+    }
+
+    .navbar nav {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .navbar nav a {
+        font-size: 12px;
+    }
+
+    .nav-button {
+        padding: 9px 12px;
+        font-size: 13px;
+    }
+
+    .hero {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 55px 7%;
+        gap: 35px;
+    }
+
+    .hero-card {
+        flex-basis: auto;
+    }
+
+    .section {
+        padding: 55px 7%;
+    }
+
+    .steps {
+        grid-template-columns: 1fr;
+    }
+
+    .mission {
+        padding: 45px 7%;
+    }
+}
+
+
+/* Donation form page */
+.form-page {
+    width: min(100% - 36px, 680px);
+    margin: 55px auto;
+}
+
+.form-heading {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.form-heading h1 {
+    font-size: clamp(30px, 5vw, 42px);
+    line-height: 1.2;
+    margin: 12px 0;
+}
+
+.form-heading p:not(.eyebrow) {
+    color: #59675e;
+}
+
+.donation-form,
+.listing-result {
+    background: #ffffff;
+    padding: 28px;
+    border: 1px solid #e4ebe2;
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(30, 70, 40, 0.05);
+}
+
+.donation-form label {
+    display: block;
+    margin: 17px 0 7px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.donation-form input {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd7cc;
+    border-radius: 8px;
+    font: inherit;
+    background: #ffffff;
+}
+
+.donation-form input:focus {
+    outline: 2px solid #23764a;
+    outline-offset: 1px;
+}
+
+.form-submit {
+    width: 100%;
+    margin-top: 25px;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+}
+
+.notice {
+    margin: 20px 0;
+    padding: 14px;
+    border-radius: 8px;
+}
+
+.success-notice {
+    background: #e5f5e8;
+    color: #195a37;
+}
+
+.error-notice {
+    background: #fff0ed;
+    color: #9b2c20;
+}
+
+.listing-result {
+    margin-bottom: 22px;
+    overflow-wrap: anywhere;
+}
+
+.listing-result h2 {
+    margin-top: 0;
+}
+
+.safety-note {
+    text-align: center;
+}
+
+@media (max-width: 480px) {
+    .form-page {
+        margin: 30px auto;
+    }
+
+    .donation-form,
+    .listing-result {
+        padding: 20px;
+    }
+}
+
+/* ---- Added for accounts, listings and tables (CSP-friendly: no inline styles) ---- */
+.nav-actions { display: flex; align-items: center; gap: 10px; }
+.nav-user { font-size: 14px; color: #20332a; }
+.inline-form { display: inline; margin: 0; }
+button.nav-button { cursor: pointer; border: none; font: inherit; }
+.donation-form select {
+    width: 100%; padding: 12px; margin-bottom: 18px;
+    border: 1px solid #cfdcd2; border-radius: 8px; font: inherit; background: #fff;
+}
+.donation-card {
+    border: 1px solid #d8e2dc; border-radius: 12px; padding: 20px;
+    margin: 16px 0; background: #fff; color: #24352b;
+}
+.donation-card h2 { margin-top: 0; }
+.tag { font-size: 13px; background: #e6f2ea; color: #176b45; padding: 3px 10px; border-radius: 999px; }
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.filter-bar input, .filter-bar select, .claim-form input {
+    padding: 10px; border: 1px solid #cfdcd2; border-radius: 8px; font: inherit;
+}
+.claim-form { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
+.claim-form input { width: 90px; }
+.empty-message { padding: 20px; border-radius: 10px; background: #f0f5f1; }
+.data-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; }
+.data-table th, .data-table td { border: 1px solid #e0e8e2; padding: 8px 10px; text-align: left; }
+.data-table th { background: #f0f5f1; }

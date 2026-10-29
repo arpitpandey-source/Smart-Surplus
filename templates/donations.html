@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Available Donations{% endblock %}
+{% block content %}
+<section class="form-heading"><h1>Available Food Donations</h1></section>
+<form method="GET" action="{{ url_for('donations') }}" class="filter-bar">
+    <input type="text" name="q" placeholder="Search food or location" value="{{ q }}" maxlength="100">
+    <select name="category">
+        <option value="">All categories</option>
+        {% for c in categories %}
+        <option value="{{ c.name }}" {{ 'selected' if selected == c.name }}>{{ c.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="primary-button">Search</button>
+</form>
+{% if donations %}
+    <p>{{ donations|length }} listing(s) available</p>
+    {% for d in donations %}
+    <article class="donation-card">
+        <h2>{{ d.food_name }} <span class="tag">{{ d.category }}</span></h2>
+        <p><strong>Donor:</strong> {{ d.donor_name }}</p>
+        <p><strong>Portions left:</strong> {{ d.remaining_quantity }} of {{ d.quantity }}</p>
+        <p><strong>Pickup location:</strong> {{ d.location }}</p>
+        <p><strong>Collect before:</strong> {{ d.deadline|dt }}</p>
+        {% if g.user and g.user.role == 'recipient' %}
+        <form method="POST" action="{{ url_for('claim', donation_id=d.id) }}" class="claim-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="number" name="quantity" min="1" max="{{ d.remaining_quantity }}" value="1" required>
+            <button type="submit" class="primary-button">Reserve</button>
+        </form>
+        {% elif not g.user %}
+        <p class="small-note"><a href="{{ url_for('login') }}">Log in</a> as a recipient to reserve.</p>
+        {% endif %}
+    </article>
+    {% endfor %}
+{% else %}
+    <div class="empty-message"><h2>No donations found</h2><p>Check back soon, or share surplus food yourself.</p></div>
+{% endif %}
+{% endblock %}

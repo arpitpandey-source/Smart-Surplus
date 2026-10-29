@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}My activity{% endblock %}
+{% block content %}
+<section class="form-heading"><h1>{{ 'My reservations' if g.user.role == 'recipient' else 'My listings' }}</h1></section>
+{% if rows %}
+<table class="data-table">
+    {% if g.user.role == 'recipient' %}
+    <tr><th>Request</th><th>Food</th><th>Portions</th><th>Pickup</th><th>Collect before</th><th>Status</th></tr>
+    {% for r in rows %}
+    <tr><td>#{{ r.id }}</td><td>{{ r.food_name }}</td><td>{{ r.quantity }}</td><td>{{ r.location }}</td><td>{{ r.deadline|dt }}</td><td>{{ r.status }}</td></tr>
+    {% endfor %}
+    {% else %}
+    <tr><th>ID</th><th>Food</th><th>Left / total</th><th>Requests</th><th>Collect before</th><th>Status</th></tr>
+    {% for r in rows %}
+    <tr><td>#{{ r.id }}</td><td>{{ r.food_name }}</td><td>{{ r.remaining_quantity }} / {{ r.quantity }}</td><td>{{ r.request_count }}</td><td>{{ r.deadline|dt }}</td><td>{{ r.status }}</td></tr>
+    {% endfor %}
+    {% endif %}
+</table>
+{% else %}
+<div class="empty-message"><p>Nothing here yet.</p></div>
+{% endif %}
+{% endblock %}

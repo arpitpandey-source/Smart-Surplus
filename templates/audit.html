@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<section class="form-heading"><h1>Audit log</h1><p>Latest 200 security events.</p></section>
+<table class="data-table">
+    <tr><th>#</th><th>Time</th><th>User</th><th>Action</th><th>Detail</th><th>IP</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r.id }}</td><td>{{ r.created_at|dt }}</td><td>{{ r.email or '-' }}</td><td>{{ r.action }}</td><td>{{ r.detail }}</td><td>{{ r.ip_address }}</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}
