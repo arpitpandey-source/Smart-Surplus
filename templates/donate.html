@@ -6,7 +6,7 @@
     <h1>Share Your Surplus Food</h1>
     <p>Provide the details below so eligible recipients can learn about your available food.</p>
 </section>
-<form class="donation-form" action="{{ url_for('donate') }}" method="POST">
+<form class="donation-form" action="{{ url_for('donate') }}" method="POST" data-submit-label="Submitting listing...">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label for="food_name">Food name</label>
     <input type="text" id="food_name" name="food_name" placeholder="e.g. Fresh meal boxes" required maxlength="100" value="{{ form.get('food_name', '') }}">
@@ -17,6 +17,8 @@
         <option value="{{ c.id }}" {{ 'selected' if form.get('category_id') == c.id|string }}>{{ c.name }}</option>
         {% endfor %}
     </select>
+    <label for="description">Description (optional)</label>
+    <textarea id="description" name="description" rows="3" maxlength="500" placeholder="e.g. Freshly packed vegetarian meal trays, allergen info">{{ form.get('description', '') }}</textarea>
     <label for="quantity">Quantity (portions)</label>
     <input type="number" id="quantity" name="quantity" min="1" max="100000" required value="{{ form.get('quantity', '') }}">
     <label for="location">Pickup location</label>

@@ -1,38 +1,100 @@
 {% extends "base.html" %}
 {% block title %}Available Donations{% endblock %}
 {% block content %}
-<section class="form-heading"><h1>Available Food Donations</h1></section>
-<form method="GET" action="{{ url_for('donations') }}" class="filter-bar">
-    <input type="text" name="q" placeholder="Search food or location" value="{{ q }}" maxlength="100">
-    <select name="category">
-        <option value="">All categories</option>
-        {% for c in categories %}
-        <option value="{{ c.name }}" {{ 'selected' if selected == c.name }}>{{ c.name }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit" class="primary-button">Search</button>
+<section class="form-heading">
+    <p class="eyebrow">DISCOVER SURPLUS FOOD</p>
+    <h1>Available Food Donations</h1>
+</section>
+
+<form method="GET" action="{{ url_for('donations') }}" class="filter-panel" aria-label="Search and filter donations">
+    <div class="filter-grid">
+        <div class="filter-field">
+            <label for="filter-q">Keyword (food, location, description)</label>
+            <input type="text" id="filter-q" name="q" placeholder="e.g. biryani, bakery, MG Road" value="{{ q }}" maxlength="100">
+        </div>
+        <div class="filter-field">
+            <label for="filter-category">Category</label>
+            <select id="filter-category" name="category">
+                <option value="">All categories</option>
+                {% for c in categories %}
+                <option value="{{ c.name }}" {{ 'selected' if selected == c.name }}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="filter-location">Pickup area / location</label>
+            <input type="text" id="filter-location" name="location" placeholder="e.g. Gomti Nagar" value="{{ location_filter }}" maxlength="100">
+        </div>
+        <div class="filter-field">
+            <label for="filter-min-qty">Minimum portions</label>
+            <input type="number" id="filter-min-qty" name="min_qty" min="1" max="100000" placeholder="Any" value="{{ min_qty }}">
+        </div>
+        <div class="filter-field">
+            <label for="filter-urgency">Collection window</label>
+            <select id="filter-urgency" name="urgency">
+                <option value="" {{ 'selected' if urgency == '' }}>Any deadline</option>
+                <option value="6h" {{ 'selected' if urgency == '6h' }}>Urgent (within 6 hours)</option>
+                <option value="24h" {{ 'selected' if urgency == '24h' }}>Today (within 24 hours)</option>
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="filter-sort">Sort by</label>
+            <select id="filter-sort" name="sort">
+                <option value="deadline" {{ 'selected' if sort_key == 'deadline' }}>Soonest deadline</option>
+                <option value="portions" {{ 'selected' if sort_key == 'portions' }}>Most portions available</option>
+                <option value="newest" {{ 'selected' if sort_key == 'newest' }}>Recently listed</option>
+            </select>
+        </div>
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="primary-button">Search &amp; filter</button>
+        <a href="{{ url_for('donations') }}" class="secondary-button">Clear filters</a>
+    </div>
 </form>
+
 {% if donations %}
-    <p>{{ donations|length }} listing(s) available</p>
+    <p class="results-summary">{{ donations|length }} listing(s) available</p>
     {% for d in donations %}
     <article class="donation-card">
-        <h2>{{ d.food_name }} <span class="tag">{{ d.category }}</span></h2>
+        <div class="card-header">
+            <h2><a href="{{ url_for('donation_detail', donation_id=d.id) }}" class="card-title-link">{{ d.food_name }}</a></h2>
+            <div class="badge-group">
+                <span class="tag">{{ d.category }}</span>
+                <span class="status-badge status-{{ d.status }}">{{ d.status }}</span>
+                <span class="urgency-badge urgency-{{ d.urgency_level }}">{{ d.urgency_label }}</span>
+            </div>
+        </div>
+        {% if d.description %}<p class="card-desc">{{ d.description }}</p>{% endif %}
         <p><strong>Donor:</strong> {{ d.donor_name }}</p>
-        <p><strong>Portions left:</strong> {{ d.remaining_quantity }} of {{ d.quantity }}</p>
+        <p><strong>Available quantity:</strong> {{ d.remaining_quantity }} of {{ d.quantity }} portions <span class="availability-badge availability-{{ d.availability_level }}">{{ d.availability_label }}</span></p>
         <p><strong>Pickup location:</strong> {{ d.location }}</p>
         <p><strong>Collect before:</strong> {{ d.deadline|dt }}</p>
-        {% if g.user and g.user.role == 'recipient' %}
-        <form method="POST" action="{{ url_for('claim', donation_id=d.id) }}" class="claim-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="number" name="quantity" min="1" max="{{ d.remaining_quantity }}" value="1" required>
-            <button type="submit" class="primary-button">Reserve</button>
-        </form>
-        {% elif not g.user %}
+        <div class="action-row">
+            <a href="{{ url_for('donation_detail', donation_id=d.id) }}" class="secondary-button">View details</a>
+            {% if g.user and g.user.role == 'recipient' %}
+            <form method="POST" action="{{ url_for('claim', donation_id=d.id) }}" class="claim-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="claim_token" value="{{ claim_token() }}">
+                <label for="claim-qty-{{ d.id }}" class="sr-only">Portions to reserve for {{ d.food_name }}</label>
+                <input type="number" id="claim-qty-{{ d.id }}" name="quantity" min="1" max="{{ d.remaining_quantity }}" value="1" required>
+                <button type="submit" class="primary-button">Reserve</button>
+            </form>
+            {% endif %}
+        </div>
+        {% if not g.user %}
         <p class="small-note"><a href="{{ url_for('login') }}">Log in</a> as a recipient to reserve.</p>
         {% endif %}
     </article>
     {% endfor %}
 {% else %}
-    <div class="empty-message"><h2>No donations found</h2><p>Check back soon, or share surplus food yourself.</p></div>
+    <div class="empty-message">
+        <h2>No donations found</h2>
+        {% if has_active_filters %}
+        <p>No available donations match your current search or filter criteria. Try adjusting your keywords or clearing the filters.</p>
+        <p><a href="{{ url_for('donations') }}" class="secondary-button">Reset search &amp; filters</a></p>
+        {% else %}
+        <p>No surplus food donations are currently available. Check back soon, or share surplus food yourself.</p>
+        {% endif %}
+    </div>
 {% endif %}
 {% endblock %}

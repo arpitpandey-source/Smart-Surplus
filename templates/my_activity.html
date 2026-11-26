@@ -1,22 +1,175 @@
 {% extends "base.html" %}
-{% block title %}My activity{% endblock %}
+{% block title %}{{ 'Receiver Dashboard' if g.user.role == 'recipient' else 'Donor Dashboard' }}{% endblock %}
+{% block main_class %}form-page wide-page{% endblock %}
 {% block content %}
-<section class="form-heading"><h1>{{ 'My reservations' if g.user.role == 'recipient' else 'My listings' }}</h1></section>
+<section class="form-heading">
+    <p class="eyebrow">{{ 'RECEIVER ACTIVITY' if g.user.role == 'recipient' else 'DONOR ACTIVITY' }}</p>
+    <h1>{{ 'My reservations' if g.user.role == 'recipient' else 'My listings' }}</h1>
+</section>
+
+{% if g.user.role == 'recipient' %}
+<div class="stats-grid" aria-label="Receiver summary">
+    <div class="stat-card"><span class="stat-value">{{ summary.total_requests }}</span><span class="stat-label">Claims submitted</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.active_claims }}</span><span class="stat-label">Active reservations</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.completed_claims }}</span><span class="stat-label">Completed claims</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.cancelled_rejected_claims }}</span><span class="stat-label">Cancelled / Rejected</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.total_portions }}</span><span class="stat-label">Portions claimed</span></div>
+</div>
+
+<div class="filter-pills" aria-label="Filter reservations by status">
+    <a href="{{ url_for('my_activity') }}" class="pill-link {{ 'pill-active' if not status_filter }}">All</a>
+    {% for st in ('pending', 'accepted', 'completed', 'cancelled', 'rejected') %}
+    <a href="{{ url_for('my_activity', status=st) }}" class="pill-link {{ 'pill-active' if status_filter == st }}">{{ st|capitalize }}</a>
+    {% endfor %}
+</div>
+
 {% if rows %}
+<div class="table-wrap">
 <table class="data-table">
-    {% if g.user.role == 'recipient' %}
-    <tr><th>Request</th><th>Food</th><th>Portions</th><th>Pickup</th><th>Collect before</th><th>Status</th></tr>
+    <tr><th>Request</th><th>Food</th><th>Category</th><th>Donor</th><th>Portions</th><th>Location</th><th>Requested</th><th>Deadline</th><th>Status</th><th>Actions</th></tr>
     {% for r in rows %}
-    <tr><td>#{{ r.id }}</td><td>{{ r.food_name }}</td><td>{{ r.quantity }}</td><td>{{ r.location }}</td><td>{{ r.deadline|dt }}</td><td>{{ r.status }}</td></tr>
+    <tr>
+        <td>#{{ r.id }}</td>
+        <td><a href="{{ url_for('donation_detail', donation_id=r.donation_id) }}">{{ r.food_name }}</a></td>
+        <td>{{ r.category }}</td>
+        <td>{{ r.donor_name }}</td>
+        <td>{{ r.quantity }}</td>
+        <td>{{ r.location }}</td>
+        <td>{{ r.created_at|dt }}</td>
+        <td>{{ r.deadline|dt }}</td>
+        <td><span class="status-badge status-{{ r.status }}">{{ r.status }}</span></td>
+        <td class="table-actions">
+            <a href="{{ url_for('donation_detail', donation_id=r.donation_id) }}" class="table-link">View</a>
+            {% if r.status in ('pending', 'accepted') %}
+            <form method="POST" action="{{ url_for('complete_request', req_id=r.id) }}" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="my">
+                <button type="submit" class="link-button table-link">Complete</button>
+            </form>
+            <form method="POST" action="{{ url_for('cancel_request', req_id=r.id) }}" class="inline-form" data-confirm="Cancel reservation #{{ r.id }} and release {{ r.quantity }} portion(s)?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="my">
+                <button type="submit" class="link-button danger-link">Cancel</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
     {% endfor %}
-    {% else %}
-    <tr><th>ID</th><th>Food</th><th>Left / total</th><th>Requests</th><th>Collect before</th><th>Status</th></tr>
-    {% for r in rows %}
-    <tr><td>#{{ r.id }}</td><td>{{ r.food_name }}</td><td>{{ r.remaining_quantity }} / {{ r.quantity }}</td><td>{{ r.request_count }}</td><td>{{ r.deadline|dt }}</td><td>{{ r.status }}</td></tr>
-    {% endfor %}
-    {% endif %}
 </table>
+</div>
 {% else %}
-<div class="empty-message"><p>Nothing here yet.</p></div>
+<div class="empty-message">
+    <h2>No claims found</h2>
+    <p>{{ 'No reservations match this status.' if status_filter else 'You have not claimed any food donations yet.' }}</p>
+    <p><a href="{{ url_for('donations') }}" class="primary-button">Browse available donations</a></p>
+</div>
+{% endif %}
+
+{% else %}
+<div class="stats-grid" aria-label="Donor summary">
+    <div class="stat-card"><span class="stat-value">{{ summary.total_donations }}</span><span class="stat-label">Total donations</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.available_count }}</span><span class="stat-label">Available</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.claimed_count }}</span><span class="stat-label">Fully claimed</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.expired_count }}</span><span class="stat-label">Expired</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.cancelled_count }}</span><span class="stat-label">Cancelled</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.total_portions }}</span><span class="stat-label">Portions donated</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.remaining_portions }}</span><span class="stat-label">Portions open</span></div>
+    <div class="stat-card"><span class="stat-value">{{ summary.total_requests_received }}</span><span class="stat-label">Requests received</span></div>
+</div>
+
+<div class="filter-pills" aria-label="Filter donations by status">
+    <a href="{{ url_for('my_activity') }}" class="pill-link {{ 'pill-active' if not status_filter }}">All</a>
+    {% for st in ('available', 'claimed', 'expired', 'cancelled') %}
+    <a href="{{ url_for('my_activity', status=st) }}" class="pill-link {{ 'pill-active' if status_filter == st }}">{{ st|capitalize }}</a>
+    {% endfor %}
+</div>
+
+{% if rows %}
+<div class="table-wrap">
+<table class="data-table">
+    <tr><th>ID</th><th>Food</th><th>Category</th><th>Remaining / Total</th><th>Requests</th><th>Collect before</th><th>Status</th><th>Actions</th></tr>
+    {% for r in rows %}
+    <tr>
+        <td>#{{ r.id }}</td>
+        <td><a href="{{ url_for('donation_detail', donation_id=r.id) }}">{{ r.food_name }}</a></td>
+        <td>{{ r.category }}</td>
+        <td>{{ r.remaining_quantity }} / {{ r.quantity }}</td>
+        <td>{{ r.request_count }}</td>
+        <td>{{ r.deadline|dt }}</td>
+        <td><span class="status-badge status-{{ r.display_status }}">{{ r.display_status }}</span></td>
+        <td class="table-actions">
+            <a href="{{ url_for('donation_detail', donation_id=r.id) }}" class="table-link">View</a>
+            {% if r.status != 'cancelled' %}
+            <a href="{{ url_for('edit_donation', donation_id=r.id) }}" class="table-link">Edit</a>
+            <form method="POST" action="{{ url_for('cancel_donation', donation_id=r.id) }}" class="inline-form" data-confirm="Cancel donation #{{ r.id }}?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="my">
+                <button type="submit" class="link-button danger-link">Cancel</button>
+            </form>
+            {% endif %}
+            {% if r.request_count == 0 %}
+            <form method="POST" action="{{ url_for('delete_donation', donation_id=r.id) }}" class="inline-form" data-confirm="Delete donation #{{ r.id }} permanently?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="link-button danger-link">Delete</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty-message">
+    <h2>No donations found</h2>
+    <p>{{ 'No donations match this status filter.' if status_filter else 'You have not created any food donations yet.' }}</p>
+    <p><a href="{{ url_for('donate') }}" class="primary-button">Create a donation</a></p>
+</div>
+{% endif %}
+
+<section class="detail-requests">
+    <h2>Claims &amp; requests received</h2>
+    {% if incoming_requests %}
+    <div class="table-wrap">
+    <table class="data-table">
+        <tr><th>Request</th><th>Food</th><th>Recipient</th><th>Portions</th><th>Requested</th><th>Status</th><th>Actions</th></tr>
+        {% for req in incoming_requests %}
+        <tr>
+            <td>#{{ req.id }}</td>
+            <td><a href="{{ url_for('donation_detail', donation_id=req.donation_id) }}">{{ req.food_name }}</a></td>
+            <td>{{ req.recipient_name }}</td>
+            <td>{{ req.quantity }}</td>
+            <td>{{ req.created_at|dt }}</td>
+            <td><span class="status-badge status-{{ req.status }}">{{ req.status }}</span></td>
+            <td class="table-actions">
+                {% if req.status == 'pending' and req.donation_status != 'cancelled' %}
+                <form method="POST" action="{{ url_for('accept_request', req_id=req.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="my">
+                    <button type="submit" class="link-button table-link">Accept</button>
+                </form>
+                {% endif %}
+                {% if req.status in ('pending', 'accepted') and req.donation_status != 'cancelled' %}
+                <form method="POST" action="{{ url_for('complete_request', req_id=req.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="my">
+                    <button type="submit" class="link-button table-link">Complete</button>
+                </form>
+                {% endif %}
+                {% if req.status in ('pending', 'accepted') %}
+                <form method="POST" action="{{ url_for('reject_request', req_id=req.id) }}" class="inline-form" data-confirm="Reject request #{{ req.id }} and restore {{ req.quantity }} portion(s)?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="my">
+                    <button type="submit" class="link-button danger-link">Reject</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-message"><p>No claims or requests have been received on your listings yet.</p></div>
+    {% endif %}
+</section>
 {% endif %}
 {% endblock %}

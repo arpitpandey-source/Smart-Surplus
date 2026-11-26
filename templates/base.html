@@ -5,18 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SmartSurplus{% endblock %} | SmartSurplus</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     {% include "_nav.html" %}
-    <main class="form-page">
+    <main id="main-content" class="{% block main_class %}form-page{% endblock %}">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                <div class="notice {{ 'success-notice' if category == 'success' else 'error-notice' }}">{{ message }}</div>
-            {% endfor %}
+            {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="notice {{ 'success-notice' if category == 'success' else 'error-notice' }}"
+                         role="{{ 'status' if category == 'success' else 'alert' }}"
+                         aria-live="{{ 'polite' if category == 'success' else 'assertive' }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
         {% endwith %}
-        {% if error %}<div class="notice error-notice">{{ error }}</div>{% endif %}
+        {% if error %}<div class="notice error-notice" role="alert" aria-live="assertive">{{ error }}</div>{% endif %}
         {% block content %}{% endblock %}
     </main>
-    <footer><p>© 2026 SmartSurplus</p></footer>
+    <footer>
+        <p>© 2026 SmartSurplus · Reducing food waste through community redistribution</p>
+    </footer>
 </body>
 </html>

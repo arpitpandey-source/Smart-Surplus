@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block main_class %}form-page wide-page{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">ACTIVITY UPDATES</p>
+    <h1>Notifications</h1>
+    <p>{{ g.unread_notifications }} unread · {{ total }} total in this view</p>
+</section>
+
+<div class="notif-toolbar">
+    <div class="filter-pills" aria-label="Filter notifications">
+        <a href="{{ url_for('notifications_view', filter='all') }}" class="pill-link {{ 'pill-active' if filter_mode == 'all' }}">All history</a>
+        <a href="{{ url_for('notifications_view', filter='unread') }}" class="pill-link {{ 'pill-active' if filter_mode == 'unread' }}">Unread only</a>
+    </div>
+    {% if g.unread_notifications > 0 %}
+    <form method="POST" action="{{ url_for('notifications_mark_all_read') }}" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="secondary-button">Mark all as read</button>
+    </form>
+    {% endif %}
+</div>
+
+{% if notifications %}
+    {% for n in notifications %}
+    <article class="donation-card {{ 'notif-unread' if not n.is_read }}">
+        <div class="badge-group">
+            <span class="tag">{{ n.event_type }}</span>
+            <span class="status-badge {{ 'status-pending' if not n.is_read else 'status-available' }}">{{ 'Unread' if not n.is_read else 'Read' }}</span>
+            <span class="small-note notif-time">{{ n.created_at|dt }}</span>
+        </div>
+        <p class="notif-msg">{{ n.message }}</p>
+        <div class="action-row">
+            {% if n.donation_id %}
+            <a href="{{ url_for('donation_detail', donation_id=n.donation_id) }}" class="secondary-button">View donation</a>
+            {% endif %}
+            {% if not n.is_read %}
+            <form method="POST" action="{{ url_for('notification_mark_read', notif_id=n.id) }}" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="filter" value="{{ filter_mode }}">
+                <button type="submit" class="primary-button">Mark as read</button>
+            </form>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="{{ url_for('notifications_view', page=page-1, filter=filter_mode) }}" class="secondary-button">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="{{ url_for('notifications_view', page=page+1, filter=filter_mode) }}" class="secondary-button">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% else %}
+    <div class="empty-message">
+        <h2>No notifications</h2>
+        <p>{{ 'You have no unread notifications.' if filter_mode == 'unread' else 'No notifications have been recorded for your account yet.' }}</p>
+    </div>
+{% endif %}
+{% endblock %}
+

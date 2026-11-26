@@ -1,116 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Reduce Food Waste{% endblock %}
+{% block main_class %}home-page{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <p class="eyebrow">FOOD WASTE REDUCTION PLATFORM</p>
+        <h1>
+            Good Food Deserves
+            <span>A Second Chance.</span>
+        </h1>
+        <p class="hero-description">
+            SmartSurplus connects surplus food from restaurants, bakeries, and caterers
+            with NGOs and communities that need it—making redistribution fast, accountable, and waste-free.
+        </p>
+        <div class="hero-cta">
+            <a href="{{ url_for('donations') }}" class="primary-button">Browse Available Food</a>
+            {% if g.user %}
+                {% if g.user.role in ('donor', 'admin') %}
+                <a href="{{ url_for('donate') }}" class="secondary-button">Share Surplus Food</a>
+                {% else %}
+                <a href="{{ url_for('my_activity') }}" class="secondary-button">View My Reservations</a>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('register') }}" class="secondary-button">Create Free Account</a>
+            {% endif %}
+        </div>
+        <p class="small-note">Save food. Support communities. Create measurable impact.</p>
+    </div>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <div class="hero-card">
+        <div class="food-icon" aria-hidden="true">🥗</div>
+        <h2>Every Meal Matters</h2>
+        <p>Turn surplus edible food into timely support for local communities before collection deadlines pass.</p>
+        <div class="impact-label">Less Waste · More Hope</div>
+    </div>
+</section>
 
-    <title>SmartSurplus | Reduce Food Waste</title>
+<section id="about" class="section">
+    <p class="eyebrow">WHY SMARTSURPLUS?</p>
+    <h2>Making surplus food useful</h2>
+    <p>
+        Restaurants, bakeries, grocery stores, and hostels often have fresh extra food while nearby
+        shelters and community kitchens need support. SmartSurplus bridges that gap in real time.
+    </p>
+</section>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+<section id="how-it-works" class="section">
+    <p class="eyebrow">SIMPLE PROCESS</p>
+    <h2>How It Works</h2>
+    <div class="steps">
+        <article class="step-card">
+            <div class="step-number">01</div>
+            <h3>List Surplus Food</h3>
+            <p>Donors publish food details, portions available, pickup location, and collection deadline.</p>
+        </article>
+        <article class="step-card">
+            <div class="step-number">02</div>
+            <h3>Find a Match</h3>
+            <p>Verified recipients search and filter open listings by category, area, portions, and urgency.</p>
+        </article>
+        <article class="step-card">
+            <div class="step-number">03</div>
+            <h3>Coordinate Collection</h3>
+            <p>Portions are reserved atomically to prevent double-booking, with live status tracking through pickup.</p>
+        </article>
+    </div>
+</section>
 
-<body>
-
-    {% include "_nav.html" %}
-
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <p class="eyebrow">FOOD WASTE REDUCTION PLATFORM</p>
-
-                <h1>
-                    Good Food Deserves
-                    <span>A Second Chance.</span>
-                </h1>
-
-                <p class="hero-description">
-                    SmartSurplus connects surplus food with people
-                    and organisations that need it, helping reduce
-                    waste and build a more sustainable community.
-                </p>
-
-                <a href="#how-it-works" class="primary-button">
-                    Discover How It Works
-                </a>
-
-                <p class="small-note">
-                    Save food. Support communities. Create impact.
-                </p>
-            </div>
-
-            <div class="hero-card">
-                <div class="food-icon">🥗</div>
-                <h2>Every Meal Matters</h2>
-                <p>
-                    Turn surplus food into an opportunity
-                    to help someone.
-                </p>
-                <div class="impact-label">
-                    Less Waste. More Hope.
-                </div>
-            </div>
-        </section>
-
-        <section id="about" class="section">
-            <p class="eyebrow">WHY SMARTSURPLUS?</p>
-            <h2>Making surplus food useful</h2>
-
-            <p>
-                Restaurants, bakeries, grocery stores, and other
-                food providers can have extra food while nearby
-                communities need support. Our goal is to help
-                connect these two sides.
-            </p>
-        </section>
-
-        <section id="how-it-works" class="section">
-            <p class="eyebrow">SIMPLE PROCESS</p>
-            <h2>How It Works</h2>
-
-            <div class="steps">
-                <article class="step-card">
-                    <div class="step-number">01</div>
-                    <h3>List Surplus Food</h3>
-                    <p>
-                        Donors share food details, quantity,
-                        location, and collection deadline.
-                    </p>
-                </article>
-
-                <article class="step-card">
-                    <div class="step-number">02</div>
-                    <h3>Find a Match</h3>
-                    <p>
-                        Eligible recipients discover suitable
-                        available food listings.
-                    </p>
-                </article>
-
-                <article class="step-card">
-                    <div class="step-number">03</div>
-                    <h3>Coordinate Collection</h3>
-                    <p>
-                        Donors and recipients coordinate
-                        collection and update request status.
-                    </p>
-                </article>
-            </div>
-        </section>
-
-        <section id="mission" class="mission">
-            <h2>A smarter way to reduce food waste</h2>
-            <p>
-                Our mission is to make surplus food easier to
-                discover, share, and redistribute responsibly.
-            </p>
-        </section>
-    </main>
-
-    <footer>
-        <p>© 2026 SmartSurplus | Built for a better tomorrow.</p>
-    </footer>
-
-</body>
-</html>
+<section id="mission" class="mission">
+    <h2>A smarter way to reduce food waste</h2>
+    <p>Our mission is to make surplus food easier to discover, share, and redistribute responsibly.</p>
+</section>
+{% endblock %}

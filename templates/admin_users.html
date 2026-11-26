@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Admin - Users{% endblock %}
+{% block main_class %}form-page wide-page{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>User Management</h1>
+</section>
+{% with active_tab='users' %}{% include "_admin_tabs.html" %}{% endwith %}
+
+<form method="GET" action="{{ url_for('admin_users') }}" class="filter-panel">
+    <div class="filter-grid">
+        <div class="filter-field">
+            <label for="user-q">Search name or email</label>
+            <input type="text" id="user-q" name="q" value="{{ q }}" placeholder="e.g. Green Leaf or @demo.com" maxlength="100">
+        </div>
+        <div class="filter-field">
+            <label for="user-role">Role</label>
+            <select id="user-role" name="role">
+                <option value="">All roles</option>
+                <option value="donor" {{ 'selected' if role == 'donor' }}>Donor</option>
+                <option value="recipient" {{ 'selected' if role == 'recipient' }}>Recipient</option>
+                <option value="admin" {{ 'selected' if role == 'admin' }}>Admin</option>
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="user-status">Account status</label>
+            <select id="user-status" name="status">
+                <option value="">All statuses</option>
+                <option value="active" {{ 'selected' if status == 'active' }}>Active</option>
+                <option value="suspended" {{ 'selected' if status == 'suspended' }}>Suspended</option>
+            </select>
+        </div>
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="primary-button">Filter users</button>
+        <a href="{{ url_for('admin_users') }}" class="secondary-button">Clear</a>
+    </div>
+</form>
+
+{% if users %}
+<div class="table-wrap">
+<table class="data-table">
+    <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Donations / Claims</th><th>Joined</th><th>Actions</th></tr>
+    {% for u in users %}
+    <tr>
+        <td>#{{ u.id }}</td>
+        <td>{{ u.full_name }}</td>
+        <td>{{ u.email }}</td>
+        <td><span class="tag">{{ u.role }}</span></td>
+        <td><span class="status-badge {{ 'status-available' if u.is_active else 'status-cancelled' }}">{{ 'active' if u.is_active else 'suspended' }}</span></td>
+        <td>{{ u.donation_count }} / {{ u.request_count }}</td>
+        <td>{{ u.created_at|dt }}</td>
+        <td class="table-actions">
+            {% if u.id != g.user.id %}
+            <form method="POST" action="{{ url_for('admin_toggle_user', user_id=u.id) }}" class="inline-form" data-confirm="{{ 'Suspend' if u.is_active else 'Activate' }} account {{ u.email }}?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="link-button {{ 'danger-link' if u.is_active else 'table-link' }}">{{ 'Suspend' if u.is_active else 'Activate' }}</button>
+            </form>
+            {% else %}
+            <span class="small-note">Current admin</span>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty-message"><p>No users match the selected filters.</p></div>
+{% endif %}
+{% endblock %}
+

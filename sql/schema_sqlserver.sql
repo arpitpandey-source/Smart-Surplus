@@ -11,10 +11,17 @@ CREATE TABLE dbo.users (
     password_hash   NVARCHAR(255) NOT NULL,
     role            VARCHAR(20)   NOT NULL
                     CONSTRAINT ck_users_role CHECK (role IN ('donor', 'recipient', 'admin')),
+    is_active       BIT           NOT NULL CONSTRAINT df_users_active DEFAULT 1,
     failed_attempts INT           NOT NULL CONSTRAINT df_users_failed DEFAULT 0,
     locked_until    DATETIME2(0)  NULL,
     created_at      DATETIME2(0)  NOT NULL
 );
+GO
+
+IF COL_LENGTH('dbo.users', 'is_active') IS NULL
+    ALTER TABLE dbo.users
+        ADD is_active BIT NOT NULL
+            CONSTRAINT df_users_active DEFAULT 1;
 GO
 
 IF OBJECT_ID('dbo.categories', 'U') IS NULL
@@ -30,6 +37,7 @@ CREATE TABLE dbo.donations (
     donor_id           INT NOT NULL CONSTRAINT fk_donations_donor    REFERENCES dbo.users(id),
     category_id        INT NOT NULL CONSTRAINT fk_donations_category REFERENCES dbo.categories(id),
     food_name          NVARCHAR(100) NOT NULL,
+    description        NVARCHAR(500) NOT NULL CONSTRAINT df_donations_desc DEFAULT N'',
     quantity           INT NOT NULL CONSTRAINT ck_donations_qty CHECK (quantity BETWEEN 1 AND 100000),
     remaining_quantity INT NOT NULL CONSTRAINT ck_donations_rem CHECK (remaining_quantity >= 0),
     location           NVARCHAR(200) NOT NULL,
@@ -41,6 +49,12 @@ CREATE TABLE dbo.donations (
 );
 GO
 
+IF COL_LENGTH('dbo.donations', 'description') IS NULL
+    ALTER TABLE dbo.donations
+        ADD description NVARCHAR(500) NOT NULL
+            CONSTRAINT df_donations_desc DEFAULT N'';
+GO
+
 IF OBJECT_ID('dbo.requests', 'U') IS NULL
 CREATE TABLE dbo.requests (
     id           INT IDENTITY(1,1) CONSTRAINT pk_requests PRIMARY KEY,
@@ -48,9 +62,19 @@ CREATE TABLE dbo.requests (
     recipient_id INT NOT NULL CONSTRAINT fk_requests_recipient REFERENCES dbo.users(id),
     quantity     INT NOT NULL CONSTRAINT ck_requests_qty CHECK (quantity >= 1),
     status       VARCHAR(20) NOT NULL CONSTRAINT df_requests_status DEFAULT 'pending'
-                 CONSTRAINT ck_requests_status CHECK (status IN ('pending', 'collected', 'cancelled')),
+                 CONSTRAINT ck_requests_status CHECK (status IN ('pending', 'accepted', 'rejected', 'completed', 'cancelled')),
     created_at   DATETIME2(0) NOT NULL
 );
+GO
+
+IF OBJECT_ID('dbo.ck_requests_status', 'C') IS NOT NULL
+   AND OBJECT_DEFINITION(OBJECT_ID('dbo.ck_requests_status', 'C')) LIKE '%collected%'
+BEGIN
+    ALTER TABLE dbo.requests DROP CONSTRAINT ck_requests_status;
+    UPDATE dbo.requests SET status = 'completed' WHERE status = 'collected';
+    ALTER TABLE dbo.requests ADD CONSTRAINT ck_requests_status
+        CHECK (status IN ('pending', 'accepted', 'rejected', 'completed', 'cancelled'));
+END
 GO
 
 IF OBJECT_ID('dbo.audit_log', 'U') IS NULL
@@ -64,6 +88,20 @@ CREATE TABLE dbo.audit_log (
 );
 GO
 
+IF OBJECT_ID('dbo.notifications', 'U') IS NULL
+CREATE TABLE dbo.notifications (
+    id          INT IDENTITY(1,1) CONSTRAINT pk_notifications PRIMARY KEY,
+    user_id     INT NOT NULL CONSTRAINT fk_notifications_user REFERENCES dbo.users(id),
+    donation_id INT NULL CONSTRAINT fk_notifications_donation REFERENCES dbo.donations(id),
+    request_id  INT NULL CONSTRAINT fk_notifications_request REFERENCES dbo.requests(id),
+    event_type  VARCHAR(40)   NOT NULL,
+    message     NVARCHAR(500) NOT NULL,
+    is_read     BIT           NOT NULL CONSTRAINT df_notifications_read DEFAULT 0,
+    dedup_key   VARCHAR(100)  NULL,
+    created_at  DATETIME2(0)  NOT NULL
+);
+GO
+
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_donations_status_deadline')
     CREATE INDEX ix_donations_status_deadline ON dbo.donations (status, deadline);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_donations_donor')
@@ -72,11 +110,17 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_requests_recipient')
     CREATE INDEX ix_requests_recipient ON dbo.requests (recipient_id);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_requests_donation')
     CREATE INDEX ix_requests_donation ON dbo.requests (donation_id);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ix_notifications_user_read')
+    CREATE INDEX ix_notifications_user_read ON dbo.notifications (user_id, is_read, id);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_notifications_user_dedup')
+    CREATE UNIQUE INDEX ux_notifications_user_dedup
+        ON dbo.notifications (user_id, dedup_key) WHERE dedup_key IS NOT NULL;
 GO
 
 CREATE OR ALTER VIEW dbo.v_open_donations AS
-SELECT d.id, d.food_name, d.quantity, d.remaining_quantity, d.location,
-       d.deadline, d.created_at, c.name AS category, u.full_name AS donor_name
+SELECT d.id, d.donor_id, d.food_name, d.description, d.quantity,
+       d.remaining_quantity, d.location, d.deadline, d.created_at,
+       c.name AS category, u.full_name AS donor_name
 FROM dbo.donations d
 JOIN dbo.categories c ON c.id = d.category_id
 JOIN dbo.users u      ON u.id = d.donor_id
@@ -99,7 +143,8 @@ GO
    GRANT SELECT                 ON dbo.categories TO smartsurplus_app;
    GRANT SELECT, INSERT, UPDATE ON dbo.donations  TO smartsurplus_app;
    GRANT SELECT, INSERT, UPDATE ON dbo.requests   TO smartsurplus_app;
-   GRANT SELECT, INSERT         ON dbo.audit_log  TO smartsurplus_app;
+   GRANT SELECT, INSERT         ON dbo.audit_log     TO smartsurplus_app;
+   GRANT SELECT, INSERT, UPDATE ON dbo.notifications TO smartsurplus_app;
    GRANT SELECT                 ON dbo.v_open_donations TO smartsurplus_app;
    -- No DELETE, no ALTER, no DROP: a SQL-injection bug cannot wipe tables.
 */

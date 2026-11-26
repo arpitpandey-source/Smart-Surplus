@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block main_class %}form-page wide-page{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">SYSTEM ADMINISTRATION</p>
+    <h1>Administrator Dashboard</h1>
+</section>
+{% with active_tab='overview' %}{% include "_admin_tabs.html" %}{% endwith %}
+
+<section aria-label="User metrics">
+    <h2>Users</h2>
+    <div class="stats-grid">
+        <div class="stat-card"><span class="stat-value">{{ user_stats.total_users }}</span><span class="stat-label">Total users</span></div>
+        <div class="stat-card"><span class="stat-value">{{ user_stats.donor_count }}</span><span class="stat-label">Donors</span></div>
+        <div class="stat-card"><span class="stat-value">{{ user_stats.recipient_count }}</span><span class="stat-label">Recipients</span></div>
+        <div class="stat-card"><span class="stat-value">{{ user_stats.admin_count }}</span><span class="stat-label">Admins</span></div>
+        <div class="stat-card"><span class="stat-value">{{ user_stats.suspended_count }}</span><span class="stat-label">Suspended</span></div>
+    </div>
+</section>
+
+<section aria-label="Donation metrics">
+    <h2>Donations &amp; Portions</h2>
+    <div class="stats-grid">
+        <div class="stat-card"><span class="stat-value">{{ donation_stats.total_donations }}</span><span class="stat-label">Total donations</span></div>
+        <div class="stat-card"><span class="stat-value">{{ donation_stats.available_count }}</span><span class="stat-label">Available</span></div>
+        <div class="stat-card"><span class="stat-value">{{ donation_stats.claimed_count }}</span><span class="stat-label">Fully claimed</span></div>
+        <div class="stat-card"><span class="stat-value">{{ donation_stats.expired_count }}</span><span class="stat-label">Expired</span></div>
+        <div class="stat-card"><span class="stat-value">{{ donation_stats.cancelled_count }}</span><span class="stat-label">Cancelled</span></div>
+        <div class="stat-card"><span class="stat-value">{{ donation_stats.total_portions_donated }}</span><span class="stat-label">Portions donated</span></div>
+        <div class="stat-card"><span class="stat-value">{{ donation_stats.total_portions_claimed }}</span><span class="stat-label">Portions claimed</span></div>
+    </div>
+</section>
+
+<section aria-label="Request monitoring metrics">
+    <h2>Claims &amp; Monitoring</h2>
+    <div class="stats-grid">
+        <div class="stat-card"><span class="stat-value">{{ request_stats.total_requests }}</span><span class="stat-label">Total requests</span></div>
+        <div class="stat-card"><span class="stat-value">{{ request_stats.active_requests }}</span><span class="stat-label">Active pending/accepted</span></div>
+        <div class="stat-card"><span class="stat-value">{{ request_stats.completed_requests }}</span><span class="stat-label">Completed pickups</span></div>
+        <div class="stat-card"><span class="stat-value">{{ request_stats.problematic_requests }}</span><span class="stat-label">Problematic records</span></div>
+    </div>
+    {% if request_stats.problematic_requests > 0 %}
+    <div class="notice error-notice">
+        {{ request_stats.problematic_requests }} active request(s) belong to expired or cancelled donations.
+        <a href="{{ url_for('admin_requests', problematic='1') }}">Review problematic records</a>
+    </div>
+    {% endif %}
+</section>
+
+<section class="detail-requests">
+    <h2>Recent Audit Events</h2>
+    {% if recent_events %}
+    <div class="table-wrap">
+    <table class="data-table">
+        <tr><th>#</th><th>Time</th><th>User</th><th>Action</th><th>Detail</th><th>IP</th></tr>
+        {% for r in recent_events %}
+        <tr><td>{{ r.id }}</td><td>{{ r.created_at|dt }}</td><td>{{ r.email or '-' }}</td><td>{{ r.action }}</td><td>{{ r.detail }}</td><td>{{ r.ip_address }}</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+    <p class="small-note"><a href="{{ url_for('audit_view') }}">View full paginated audit log</a></p>
+    {% else %}
+    <div class="empty-message"><p>No audit events logged yet.</p></div>
+    {% endif %}
+</section>
+{% endblock %}
+

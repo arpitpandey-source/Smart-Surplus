@@ -1,0 +1,8 @@
+<nav class="admin-tabs" aria-label="Administrator navigation">
+    <a href="{{ url_for('admin_dashboard') }}" class="tab-link {{ 'tab-active' if active_tab == 'overview' }}">Overview</a>
+    <a href="{{ url_for('admin_users') }}" class="tab-link {{ 'tab-active' if active_tab == 'users' }}">Users</a>
+    <a href="{{ url_for('admin_donations') }}" class="tab-link {{ 'tab-active' if active_tab == 'donations' }}">Donations</a>
+    <a href="{{ url_for('admin_requests') }}" class="tab-link {{ 'tab-active' if active_tab == 'requests' }}">Requests</a>
+    <a href="{{ url_for('audit_view') }}" class="tab-link {{ 'tab-active' if active_tab == 'audit' }}">Audit log</a>
+</nav>
+

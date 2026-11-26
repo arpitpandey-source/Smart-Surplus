@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Admin - Requests{% endblock %}
+{% block main_class %}form-page wide-page{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>Request &amp; Claim Monitoring</h1>
+</section>
+{% with active_tab='requests' %}{% include "_admin_tabs.html" %}{% endwith %}
+
+<div class="filter-pills">
+    <a href="{{ url_for('admin_requests') }}" class="pill-link {{ 'pill-active' if not status_filter and not problematic_only }}">All</a>
+    <a href="{{ url_for('admin_requests', problematic='1') }}" class="pill-link {{ 'pill-active' if problematic_only }}">Problematic only</a>
+    {% for st in ('pending', 'accepted', 'completed', 'rejected', 'cancelled') %}
+    <a href="{{ url_for('admin_requests', status=st) }}" class="pill-link {{ 'pill-active' if status_filter == st }}">{{ st|capitalize }}</a>
+    {% endfor %}
+</div>
+
+{% if requests_list %}
+<div class="table-wrap">
+<table class="data-table">
+    <tr><th>Req</th><th>Food</th><th>Donor</th><th>Recipient</th><th>Qty</th><th>Requested</th><th>Status</th><th>Flags</th><th>Actions</th></tr>
+    {% for r in requests_list %}
+    <tr>
+        <td>#{{ r.id }}</td>
+        <td><a href="{{ url_for('donation_detail', donation_id=r.donation_id) }}">{{ r.food_name }}</a></td>
+        <td>{{ r.donor_name }}</td>
+        <td>{{ r.recipient_name }}</td>
+        <td>{{ r.quantity }}</td>
+        <td>{{ r.created_at|dt }}</td>
+        <td><span class="status-badge status-{{ r.status }}">{{ r.status }}</span></td>
+        <td>
+            {% if r.issues %}
+                {% for issue in r.issues %}<span class="issue-badge">{{ issue }}</span>{% endfor %}
+            {% else %}
+                <span class="small-note">OK</span>
+            {% endif %}
+        </td>
+        <td class="table-actions">
+            {% if r.status in ('pending', 'accepted') %}
+                {% if r.donation_status != 'cancelled' %}
+                <form method="POST" action="{{ url_for('complete_request', req_id=r.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="admin_requests">
+                    <button type="submit" class="link-button table-link">Complete</button>
+                </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('reject_request', req_id=r.id) }}" class="inline-form" data-confirm="Reject request #{{ r.id }} and restore {{ r.quantity }} portion(s)?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="admin_requests">
+                    <button type="submit" class="link-button danger-link">Reject</button>
+                </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty-message"><p>No requests match the selected criteria.</p></div>
+{% endif %}
+{% endblock %}
+

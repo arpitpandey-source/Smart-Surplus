@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Admin - Donations{% endblock %}
+{% block main_class %}form-page wide-page{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">ADMINISTRATION</p>
+    <h1>Donation Management</h1>
+</section>
+{% with active_tab='donations' %}{% include "_admin_tabs.html" %}{% endwith %}
+
+<form method="GET" action="{{ url_for('admin_donations') }}" class="filter-panel">
+    <div class="filter-grid">
+        <div class="filter-field">
+            <label for="adm-don-q">Search food, location, or donor</label>
+            <input type="text" id="adm-don-q" name="q" value="{{ q }}" maxlength="100">
+        </div>
+        <div class="filter-field">
+            <label for="adm-don-cat">Category</label>
+            <select id="adm-don-cat" name="category">
+                <option value="">All categories</option>
+                {% for c in categories %}
+                <option value="{{ c.name }}" {{ 'selected' if selected_category == c.name }}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="adm-don-status">Status</label>
+            <select id="adm-don-status" name="status">
+                <option value="">All statuses</option>
+                {% for st in ('available', 'claimed', 'expired', 'cancelled') %}
+                <option value="{{ st }}" {{ 'selected' if status_filter == st }}>{{ st|capitalize }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="primary-button">Filter donations</button>
+        <a href="{{ url_for('admin_donations') }}" class="secondary-button">Clear</a>
+    </div>
+</form>
+
+{% if donations %}
+<div class="table-wrap">
+<table class="data-table">
+    <tr><th>ID</th><th>Food</th><th>Donor</th><th>Category</th><th>Left / Total</th><th>Requests</th><th>Deadline</th><th>Status</th><th>Actions</th></tr>
+    {% for d in donations %}
+    <tr>
+        <td>#{{ d.id }}</td>
+        <td><a href="{{ url_for('donation_detail', donation_id=d.id) }}">{{ d.food_name }}</a></td>
+        <td>{{ d.donor_name }}</td>
+        <td>{{ d.category }}</td>
+        <td>{{ d.remaining_quantity }} / {{ d.quantity }}</td>
+        <td>{{ d.request_count }}</td>
+        <td>{{ d.deadline|dt }}</td>
+        <td><span class="status-badge status-{{ d.display_status }}">{{ d.display_status }}</span></td>
+        <td class="table-actions">
+            <a href="{{ url_for('donation_detail', donation_id=d.id) }}" class="table-link">View</a>
+            {% if d.status != 'cancelled' %}
+            <form method="POST" action="{{ url_for('cancel_donation', donation_id=d.id) }}" class="inline-form" data-confirm="Cancel donation #{{ d.id }} ({{ d.food_name }})?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="admin_donations">
+                <button type="submit" class="link-button danger-link">Cancel</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="empty-message"><p>No donations match the selected filters.</p></div>
+{% endif %}
+{% endblock %}
+

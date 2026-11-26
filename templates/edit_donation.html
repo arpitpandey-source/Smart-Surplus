@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Edit Donation #{{ donation.id }}{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">UPDATE LISTING #{{ donation.id }}</p>
+    <h1>Edit Surplus Food</h1>
+    <p>Update the listing details below. Remaining quantity adjusts automatically.</p>
+</section>
+{% if claimed_qty > 0 %}
+<div class="notice success-notice">{{ claimed_qty }} portion(s) have already been claimed. New total quantity must be at least {{ claimed_qty }}.</div>
+{% endif %}
+<form class="donation-form" action="{{ url_for('edit_donation', donation_id=donation.id) }}" method="POST" data-submit-label="Saving changes...">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="food_name">Food name</label>
+    <input type="text" id="food_name" name="food_name" required maxlength="100" value="{{ form.get('food_name', '') }}">
+    <label for="category_id">Category</label>
+    <select id="category_id" name="category_id" required>
+        <option value="">Choose...</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {{ 'selected' if form.get('category_id') == c.id|string }}>{{ c.name }}</option>
+        {% endfor %}
+    </select>
+    <label for="description">Description (optional)</label>
+    <textarea id="description" name="description" rows="3" maxlength="500">{{ form.get('description', '') }}</textarea>
+    <label for="quantity">Total quantity (portions)</label>
+    <input type="number" id="quantity" name="quantity" min="{{ claimed_qty if claimed_qty > 0 else 1 }}" max="100000" required value="{{ form.get('quantity', '') }}">
+    <label for="location">Pickup location</label>
+    <input type="text" id="location" name="location" required maxlength="200" value="{{ form.get('location', '') }}">
+    <label for="deadline">Collection deadline</label>
+    <input type="datetime-local" id="deadline" name="deadline" required value="{{ form.get('deadline', '') }}">
+    <button type="submit" class="primary-button form-submit">Save changes</button>
+</form>
+<p class="small-note"><a href="{{ url_for('donation_detail', donation_id=donation.id) }}">Cancel editing and return to donation</a></p>
+{% endblock %}
+

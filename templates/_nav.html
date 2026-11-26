@@ -1,24 +1,37 @@
 <header class="navbar">
-    <a href="{{ url_for('home') }}" class="logo">SmartSurplus</a>
-    <nav>
-        <a href="{{ url_for('home') }}">Home</a>
-        <a href="{{ url_for('donations') }}">Donations</a>
-        {% if g.user %}
-            {% if g.user.role in ('donor', 'admin') %}<a href="{{ url_for('donate') }}">Donate</a>{% endif %}
-            {% if g.user.role != 'admin' %}<a href="{{ url_for('my_activity') }}">My activity</a>{% endif %}
-            {% if g.user.role == 'admin' %}<a href="{{ url_for('audit_view') }}">Audit log</a>{% endif %}
-        {% endif %}
-    </nav>
-    <div class="nav-actions">
-        {% if g.user %}
-            <span class="nav-user">{{ g.user.full_name }} ({{ g.user.role }})</span>
-            <form action="{{ url_for('logout') }}" method="POST" class="inline-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="nav-button">Log out</button>
-            </form>
-        {% else %}
-            <a href="{{ url_for('login') }}" class="nav-button">Log in</a>
-            <a href="{{ url_for('register') }}" class="nav-button">Register</a>
-        {% endif %}
+    <div class="nav-brand-row">
+        <a href="{{ url_for('home') }}" class="logo">SmartSurplus</a>
+        <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation">Menu</button>
+    </div>
+    <div id="primary-navigation" class="nav-collapse">
+        <nav aria-label="Primary navigation">
+            <a href="{{ url_for('home') }}" class="{{ 'nav-active' if request.endpoint == 'home' }}" {{ 'aria-current="page"'|safe if request.endpoint == 'home' }}>Home</a>
+            <a href="{{ url_for('donations') }}" class="{{ 'nav-active' if request.endpoint in ('donations', 'donation_detail') }}" {{ 'aria-current="page"'|safe if request.endpoint in ('donations', 'donation_detail') }}>Donations</a>
+            {% if g.user %}
+                {% if g.user.role in ('donor', 'admin') %}
+                <a href="{{ url_for('donate') }}" class="{{ 'nav-active' if request.endpoint == 'donate' }}" {{ 'aria-current="page"'|safe if request.endpoint == 'donate' }}>Donate</a>
+                {% endif %}
+                {% if g.user.role != 'admin' %}
+                <a href="{{ url_for('my_activity') }}" class="{{ 'nav-active' if request.endpoint == 'my_activity' }}" {{ 'aria-current="page"'|safe if request.endpoint == 'my_activity' }}>My activity</a>
+                {% endif %}
+                {% if g.user.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="{{ 'nav-active' if request.endpoint in ('admin_dashboard', 'admin_users', 'admin_donations', 'admin_requests') }}" {{ 'aria-current="page"'|safe if request.endpoint in ('admin_dashboard', 'admin_users', 'admin_donations', 'admin_requests') }}>Admin</a>
+                <a href="{{ url_for('audit_view') }}" class="{{ 'nav-active' if request.endpoint == 'audit_view' }}" {{ 'aria-current="page"'|safe if request.endpoint == 'audit_view' }}>Audit log</a>
+                {% endif %}
+                <a href="{{ url_for('notifications_view') }}" class="{{ 'nav-active' if request.endpoint == 'notifications_view' }}" {{ 'aria-current="page"'|safe if request.endpoint == 'notifications_view' }}>Notifications{% if g.unread_notifications %} <span class="nav-badge">{{ g.unread_notifications }}</span>{% endif %}</a>
+            {% endif %}
+        </nav>
+        <div class="nav-actions">
+            {% if g.user %}
+                <span class="nav-user">{{ g.user.full_name }} ({{ g.user.role }})</span>
+                <form action="{{ url_for('logout') }}" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="nav-button">Log out</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="secondary-button nav-link-btn">Log in</a>
+                <a href="{{ url_for('register') }}" class="nav-button">Register</a>
+            {% endif %}
+        </div>
     </div>
 </header>

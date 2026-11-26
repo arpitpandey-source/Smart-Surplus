@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ donation.food_name }}{% endblock %}
+{% block content %}
+<section class="form-heading">
+    <p class="eyebrow">DONATION #{{ donation.id }}</p>
+    <h1>{{ donation.food_name }}</h1>
+    <p><span class="tag">{{ donation.category }}</span> <span class="status-badge status-{{ donation.display_status }}">{{ donation.display_status }}</span></p>
+</section>
+
+<article class="donation-card">
+    <p><strong>Description:</strong> {{ donation.description or 'No description provided.' }}</p>
+    <p><strong>Donor:</strong> {{ donation.donor_name }}</p>
+    <p><strong>Portions remaining:</strong> {{ donation.remaining_quantity }} of {{ donation.quantity }}</p>
+    <p><strong>Pickup location:</strong> {{ donation.location }}</p>
+    <p><strong>Collection deadline:</strong> {{ donation.deadline|dt }}</p>
+    <p><strong>Listed on:</strong> {{ donation.created_at|dt }}</p>
+
+    {% if g.user and g.user.role == 'recipient' %}
+        {% if g.user.id == donation.donor_id %}
+        <p class="small-note">You cannot claim your own donation.</p>
+        {% elif donation.display_status == 'available' and donation.remaining_quantity > 0 %}
+        <form method="POST" action="{{ url_for('claim', donation_id=donation.id) }}" class="claim-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="claim_token" value="{{ claim_token() }}">
+            <input type="hidden" name="next" value="detail">
+            <label for="detail-claim-qty" class="sr-only">Portions to reserve</label>
+            <input type="number" id="detail-claim-qty" name="quantity" min="1" max="{{ donation.remaining_quantity }}" value="1" required>
+            <button type="submit" class="primary-button">Reserve portions</button>
+        </form>
+        {% else %}
+        <p class="small-note">This donation is {{ donation.display_status }} and cannot be claimed.</p>
+        {% endif %}
+    {% elif not g.user and donation.display_status == 'available' %}
+        <p class="small-note"><a href="{{ url_for('login') }}">Log in</a> as a recipient to reserve portions.</p>
+    {% endif %}
+
+    {% if can_manage %}
+    <div class="action-row">
+        {% if donation.status != 'cancelled' %}
+        <a href="{{ url_for('edit_donation', donation_id=donation.id) }}" class="primary-button">Edit donation</a>
+        <form method="POST" action="{{ url_for('cancel_donation', donation_id=donation.id) }}" class="inline-form" data-confirm="Cancel donation #{{ donation.id }} and any active pending/accepted requests?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="danger-button">Cancel donation</button>
+        </form>
+        {% endif %}
+        {% if donation.request_count == 0 %}
+        <form method="POST" action="{{ url_for('delete_donation', donation_id=donation.id) }}" class="inline-form" data-confirm="Permanently delete donation #{{ donation.id }}?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="secondary-button">Delete</button>
+        </form>
+        {% endif %}
+    </div>
+    {% if donation.request_count > 0 %}
+    <p class="small-note">This listing has {{ donation.request_count }} request(s), so it cannot be deleted; cancel it if collection will not happen.</p>
+    {% endif %}
+    {% endif %}
+</article>
+
+{% if can_manage %}
+<section class="detail-requests">
+    <h2>Requests on this donation</h2>
+    {% if requests_list %}
+    <div class="table-wrap">
+    <table class="data-table">
+        <tr><th>Request</th><th>Recipient</th><th>Portions</th><th>Status</th><th>Requested on</th><th>Actions</th></tr>
+        {% for req in requests_list %}
+        <tr>
+            <td>#{{ req.id }}</td>
+            <td>{{ req.recipient_name }}</td>
+            <td>{{ req.quantity }}</td>
+            <td><span class="status-badge status-{{ req.status }}">{{ req.status }}</span></td>
+            <td>{{ req.created_at|dt }}</td>
+            <td class="table-actions">
+                {% if req.status == 'pending' and donation.status != 'cancelled' %}
+                <form method="POST" action="{{ url_for('accept_request', req_id=req.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="detail">
+                    <button type="submit" class="link-button table-link">Accept</button>
+                </form>
+                {% endif %}
+                {% if req.status in ('pending', 'accepted') and donation.status != 'cancelled' %}
+                <form method="POST" action="{{ url_for('complete_request', req_id=req.id) }}" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="detail">
+                    <button type="submit" class="link-button table-link">Complete</button>
+                </form>
+                {% endif %}
+                {% if req.status in ('pending', 'accepted') %}
+                <form method="POST" action="{{ url_for('reject_request', req_id=req.id) }}" class="inline-form" data-confirm="Reject request #{{ req.id }} and release {{ req.quantity }} portion(s)?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="detail">
+                    <button type="submit" class="link-button danger-link">Reject</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-message"><p>No requests have been made on this donation yet.</p></div>
+    {% endif %}
+</section>
+{% endif %}
+
+<p class="small-note"><a href="{{ url_for('donations') }}">Back to available donations</a>{% if g.user and g.user.role == 'donor' %} · <a href="{{ url_for('my_activity') }}">My listings</a>{% endif %}</p>
+{% endblock %}
